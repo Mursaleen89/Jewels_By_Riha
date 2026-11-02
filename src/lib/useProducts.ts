@@ -1,0 +1,3 @@
+'use client';
+import {useEffect,useState} from 'react';import {products as initial, type Product} from './products';import {supabase} from './supabase';
+export function useProducts(){const [items,setItems]=useState<Product[]>(initial);useEffect(()=>{if(!supabase)return;let alive=true;const load=async()=>{const {data,error}=await supabase.from('products').select('*').order('created_at',{ascending:false});if(alive&&!error&&data?.length)setItems(data.map(p=>({...p,id:p.id,price:Number(p.price)})))};load();const channel=supabase.channel('catalogue-changes').on('postgres_changes',{event:'*',schema:'public',table:'products'},load).subscribe();return()=>{alive=false;supabase.removeChannel(channel)}},[]);return items}
